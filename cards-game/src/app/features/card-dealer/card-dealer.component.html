@@ -1,0 +1,63 @@
+<div class="container">
+    <h1>Card Dealer</h1>
+    
+    <div class="controls">
+      <mat-form-field>
+        <mat-label>Number of cards to deal</mat-label>
+        <input matInput 
+               type="number" 
+               [(ngModel)]="cardsToDeal" 
+               [max]="deck.length"
+               [min]="1"
+               (ngModelChange)="validateCardsToDeal()">
+        <mat-error *ngIf="cardsToDeal > deck.length">
+          Only {{ deck.length }} cards available
+        </mat-error>
+      </mat-form-field>
+  
+      <button mat-raised-button color="primary" 
+              (click)="shuffleDeck()"
+              [disabled]="deck.length <= 1">
+        <mat-icon>shuffle</mat-icon>
+        Shuffle Remaining Cards
+      </button>
+  
+      <button mat-raised-button color="accent" 
+              (click)="dealCards()" 
+              [disabled]="!deck.length || cardsToDeal < 1">
+        <mat-icon>playing_cards</mat-icon>
+        Deal Cards
+      </button>
+  
+      <button mat-raised-button color="warn" 
+              (click)="resetDeck()"
+              [disabled]="deck.length === 52 && dealtCards.length === 0">
+        <mat-icon>restart_alt</mat-icon>
+        Reset Deck
+      </button>
+    </div>
+  
+    <div class="deck-status">
+      <span [ngClass]="{'warning': deck.length <= 10}">
+        Cards remaining in deck: {{ deck.length }}
+      </span>
+    </div>
+  
+    <div class="dealt-cards">
+      <mat-card *ngFor="let card of dealtCards" 
+                [ngStyle]="{'color': card.color}" 
+                class="card">
+        <mat-card-content>
+          <div class="card-corner top-left">
+            <div>{{ card.rank }}</div>
+            <div>{{ card.symbol }}</div>
+          </div>
+          <div class="card-center">{{ card.symbol }}</div>
+          <div class="card-corner bottom-right">
+            <div>{{ card.rank }}</div>
+            <div>{{ card.symbol }}</div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
