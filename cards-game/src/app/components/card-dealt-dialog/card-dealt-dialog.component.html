@@ -1,0 +1,22 @@
+<h1 mat-dialog-title>Dealt Cards</h1>
+<div mat-dialog-content>
+  <div *ngIf="data.dealtCards.length === 0">
+    <p>No cards have been dealt yet.</p>
+  </div>
+  <div class="dealt-cards" *ngIf="data.dealtCards.length > 0">
+    <div class="card" *ngFor="let card of data.dealtCards">
+      <div class="card-corner top-left">
+        <span>{{ card.rank }}</span>
+        <span>{{ card.symbol }}</span>
+      </div>
+      <div class="card-center" [style.color]="card.color">{{ card.symbol }}</div>
+      <div class="card-corner bottom-right">
+        <span>{{ card.rank }}</span>
+        <span>{{ card.symbol }}</span>
+      </div>
+    </div>
+  </div>
+</div>
+<div mat-dialog-actions>
+  <button mat-button mat-dialog-close>Close</button>
+</div>

@@ -8,6 +8,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { Card } from '../../shared/models/card.model';
+import { Firestore, collection, setDoc, getDoc, doc } from 'firebase/firestore';
+import { db } from '../../../../../card-game-firebase/firebase';
 
 @Component({
   selector: 'app-card-dealer',
@@ -29,6 +31,7 @@ export class CardDealerComponent implements OnInit {
   deck: Card[] = [];
   dealtCards: Card[] = [];
   cardsToDeal: number = 5;
+  deckId: string = 'VD9Zpy5UVKN6GNi7d403'; 
 
   private ranks = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
   private suits = [
@@ -38,8 +41,45 @@ export class CardDealerComponent implements OnInit {
     { name: 'Spades', symbol: '♠', color: 'black' }
   ];
 
-  ngOnInit() {
-    this.initializeDeck();
+  async ngOnInit() {
+    await this.loadDeckFromFirebase();
+  }
+
+  private async loadDeckFromFirebase() {
+    try {
+      const deckRef = doc(db, 'deck', this.deckId);
+      const deckDoc = await getDoc(deckRef);
+      
+      if (deckDoc.exists()) {
+        const data = deckDoc.data();
+        this.dealtCards = data['dealtCards'] || [];
+        this.deck = data['remainingCards'] || [];
+        
+        if (this.deck.length === 0 && this.dealtCards.length === 0) {
+          this.initializeDeck();
+        }
+      } else {
+        this.initializeDeck();
+        await this.saveDeckToFirebase();
+      }
+    } catch (error) {
+      console.error('Error loading deck:', error);
+      this.initializeDeck();
+    }
+  }
+
+  private async saveDeckToFirebase() {
+    try {
+      const deckRef = doc(db, 'deck', this.deckId);
+      await setDoc(deckRef, {
+        dealtCards: this.dealtCards,
+        remainingCards: this.deck,
+        shuffled: true,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error saving deck:', error);
+    }
   }
 
   initializeDeck() {
@@ -66,23 +106,25 @@ export class CardDealerComponent implements OnInit {
     }
   }
 
-  shuffleDeck() {
-    // Fisher-Yates shuffle algorithm for remaining cards only
+  async shuffleDeck() {
     for (let i = this.deck.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [this.deck[i], this.deck[j]] = [this.deck[j], this.deck[i]];
     }
+    await this.saveDeckToFirebase();
   }
 
-  dealCards() {
+  async dealCards() {
     this.validateCardsToDeal();
     const newCards = this.deck.splice(0, this.cardsToDeal);
     this.dealtCards = [...this.dealtCards, ...newCards];
+    await this.saveDeckToFirebase();
   }
 
-  resetDeck() {
+  async resetDeck() {
     this.dealtCards = [];
     this.initializeDeck();
     this.cardsToDeal = 5;
+    await this.saveDeckToFirebase();
   }
 }
